@@ -1,0 +1,4 @@
+# CFMS download gitignore
+.cfms-download-root
+Thumbs.db
+.DS_Store
