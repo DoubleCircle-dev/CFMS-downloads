@@ -1,6 +1,6 @@
 # 遗闻之钟计划文档数据库
 
-本仓库用于整理和保存遗闻之钟计划相关的文档与档案。若需登录源数据库，可使用 [cfms_client_tauri](https://github.com/cfms-dev/cfms_client_tauri) 或[客制化 CFMS 客户端](https://github.com/DoubleCircle-dev/cfms_client_tauri-custom)。登录方法请参阅[久远澪 Wiki：遗闻之钟计划/文档数据库](https://wiki.9on0.moe/%E9%81%97%E9%97%BB%E4%B9%8B%E9%92%9F%E8%AE%A1%E5%88%92/%E6%96%87%E6%A1%A3%E6%95%B0%E6%8D%AE%E5%BA%93)。
+本仓库用于整理和保存遗闻之钟计划相关的文档与档案。若需登录源数据库，可使用 [cfms_client_tauri](https://github.com/cfms-dev/cfms_client_tauri) 或[客制化 CFMS 客户端](https://github.com/DoubleCircle-dev/cfms_client_tauri-custom)。登录方法请参阅[久远澪 Wiki：遗闻之钟计划/文档数据库](https://wiki.9on0.moe/wiki/%E9%81%97%E9%97%BB%E4%B9%8B%E9%92%9F%E8%AE%A1%E5%88%92/%E6%96%87%E6%A1%A3%E6%95%B0%E6%8D%AE%E5%BA%93)。
 
 > [!NOTE]
 > 本文件及下文所述的约定性文件均不属于源数据库内容。若其内容与源数据库信息存在冲突，将另行说明。
@@ -38,4 +38,8 @@ sync <时间>: <更新类型><文件变更数量>
 - `README.md`：仅存在于 `master` 分支，用于说明本仓库。
 - `.gitignore`：指定本地仓库中需要忽略的内容。
 - `.cfms-empty-folder`：标记源数据库中原本为空的文件夹。
-- `.cfms-no-folder-access`：标记当前文件夹无法访问。通常其子文件夹也无法访问，但其中仍可能存在可访问的文件；由于完整探测较为复杂，判断时可能需要参考人工标注。
+- `.cfms-no-folder-access`：标记当前文件夹无法访问。其子文件和子文件夹通常也无法访问，但仍可能存在可访问的内容；由于无法完整探测，具体情况可能需要结合人工标注判断。
+
+## 大文件更新说明
+
+单个文件超过 100 MB 时，仓库中将以占位符代替原文件。需要获取原文件，请前往 [Releases 页面](https://github.com/DoubleCircle-dev/CFMS-downloads/releases) 查询。
