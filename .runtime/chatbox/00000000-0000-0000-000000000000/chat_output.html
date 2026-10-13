@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>遗闻之钟计划 - 对话记录</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: #ededed;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 左侧聊天列表 */
+.sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: #e6e6e6;
+    border-right: 1px solid #d9d9d9;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sidebar-header {
+    padding: 20px 16px 12px;
+    background: #e6e6e6;
+    border-bottom: 1px solid #d9d9d9;
+}
+.sidebar-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #191919;
+    margin-bottom: 4px;
+}
+.sidebar-header .subtitle {
+    font-size: 12px;
+    color: #888;
+}
+.room-list {
+    flex: 1;
+    overflow-y: auto;
+}
+.room-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #dfdfdf;
+}
+.room-item:hover { background: #dadada; }
+.room-item.active { background: #c9c9c9; }
+.room-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    background: #07c160;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+.room-info { flex: 1; min-width: 0; }
+.room-name {
+    font-size: 15px;
+    color: #191919;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.room-meta {
+    font-size: 12px;
+    color: #999;
+}
+.room-badge {
+    font-size: 11px;
+    background: #f3514f;
+    color: #fff;
+    border-radius: 10px;
+    padding: 2px 7px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* 右侧聊天区域 */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f5f5f5;
+    min-width: 0;
+}
+.chat-header {
+    padding: 14px 20px;
+    background: #ededed;
+    border-bottom: 1px solid #d9d9d9;
+    display: flex;
+    align-items: center;
+}
+.chat-header .title {
+    font-size: 17px;
+    font-weight: 500;
+    color: #191919;
+}
+.chat-header .sub-info {
+    font-size: 12px;
+    color: #999;
+    margin-top: 2px;
+}
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+/* 时间分隔线 */
+.time-divider {
+    text-align: center;
+    margin: 16px 0;
+}
+.time-divider span {
+    font-size: 12px;
+    color: #b0b0b0;
+    background: #f5f5f5;
+    padding: 4px 12px;
+    border-radius: 2px;
+}
+.time-divider .date-label {
+    display: block;
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+/* 消息气泡 */
+.msg-row {
+    display: flex;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+.msg-row.self {
+    flex-direction: row-reverse;
+}
+.msg-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    background: #e0e0e0;
+}
+.msg-row.self .msg-avatar { margin-left: 10px; }
+.msg-row:not(.self) .msg-avatar { margin-right: 10px; }
+.msg-bubble-wrap { max-width: 65%; }
+.msg-sender {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+    padding: 0 8px;
+}
+.msg-row.self .msg-sender { text-align: right; }
+.msg-bubble {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word;
+    position: relative;
+    color: #191919;
+}
+.msg-row:not(.self) .msg-bubble {
+    background: #fff;
+    border-top-left-radius: 2px;
+}
+.msg-row.self .msg-bubble {
+    background: #95ec69;
+    border-top-right-radius: 2px;
+}
+.msg-time {
+    font-size: 11px;
+    color: #b0b0b0;
+    margin-top: 4px;
+    padding: 0 8px;
+}
+.msg-row.self .msg-time { text-align: right; }
+.msg-ref {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    font-style: italic;
+}
+
+/* 空状态 */
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+}
+.empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+.empty-state .text { font-size: 16px; }
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .sidebar { width: 100%; min-width: 0; }
+    body { flex-direction: column; }
+    .chat-area { display: none; }
+    .chat-area.mobile-active { display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; }
+}
+</style>
+</head>
+<body>
+
+<!-- 侧边栏 -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h1>💬 对话记录</h1>
+        <div class="subtitle">遗闻之钟计划 · 内部通讯</div>
+    </div>
+    <div class="room-list" id="roomList"></div>
+</div>
+
+<!-- 聊天区域 -->
+<div class="chat-area" id="chatArea">
+    <div class="empty-state" id="emptyState">
+        <div class="icon">💬</div>
+        <div class="text">选择一个会话查看</div>
+    </div>
+    <div class="chat-header" id="chatHeader" style="display:none;">
+        <div>
+            <div class="title" id="chatTitle"></div>
+            <div class="sub-info" id="chatSubInfo"></div>
+        </div>
+    </div>
+    <div class="chat-messages" id="chatMessages" style="display:none;"></div>
+</div>
+
+<script>
+// 数据
+var ROOMS = [{"id": "58218483-8665-4357-91c5-4a697f91ef74", "name": "聊天系统测试", "first_time": "2025-07-20 19:19:32", "last_time": "2025-07-20 19:31:57", "message_count": 54, "users": ["观察者", "系统开发者", "好奇的参与者"]}, {"id": "41118e70-31c0-443a-b124-d76eb45b51d7", "name": "音乐线索讨论", "first_time": "2025-07-24 20:51:09", "last_time": "2025-07-24 20:54:10", "message_count": 12, "users": ["线索发现者", "回应者"]}, {"id": "c048bbca-c904-4c75-b36e-8a2f5dd4eeec", "name": "ARG题目讨论", "first_time": "2025-07-27 14:42:04", "last_time": "2025-07-27 14:44:03", "message_count": 9, "users": ["解谜者", "伙伴"]}, {"id": "ade46a55-db85-4660-9e74-ea25eb06fc47", "name": "音频线索分析", "first_time": "2026-06-20 13:06:45", "last_time": "2026-06-20 13:19:44", "message_count": 9, "users": ["研究者A", "研究者B"]}, {"id": "1f6f9307-186d-4880-bbdb-1ff381e12df8", "name": "时间异常", "first_time": "2026-07-18 23:45:19", "last_time": "2026-07-18 23:45:19", "message_count": 1, "users": ["好奇的参与者"]}, {"id": "96644cf3-6e93-4c51-a9ee-7e7b8d58dc48", "name": "图片与身份暴露", "first_time": "2026-07-22 08:33:13", "last_time": "2026-07-22 08:48:37", "message_count": 63, "users": ["主创", "伙伴"]}, {"id": "f0359b6d-e8f4-4056-af1d-2e6360fccff5", "name": "紧急应对讨论", "first_time": "2026-07-30 13:55:24", "last_time": "2026-07-30 13:59:51", "message_count": 15, "users": ["程序", "观测组成员"]}];
+var CHATS = {"1f6f9307-186d-4880-bbdb-1ff381e12df8": [{"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2026-07-18 23:45:19", "timestamp": "2026-07-18 23:45:19", "content": "等下谁把之前对话的时间改掉了"}], "41118e70-31c0-443a-b124-d76eb45b51d7": [{"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:51:09", "timestamp": "2025-07-24 20:51:09", "content": "隔壁把歌找出来了"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:51:22", "timestamp": "2025-07-24 20:51:22", "content": "Born a Stranger"}, {"user_id": "31b1081", "user_name": "回应者", "user_avatar": "💬", "user_color": "#f56c6c", "time": "2025-07-24 20:52:01", "timestamp": "2025-07-24 20:52:01", "content": "怎么找出来的"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:52:19", "timestamp": "2025-07-24 20:52:19", "content": "Number 11"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:52:34", "timestamp": "2025-07-24 20:52:34", "content": "去月球那个专辑的第11首"}, {"user_id": "31b1081", "user_name": "回应者", "user_avatar": "💬", "user_color": "#f56c6c", "time": "2025-07-24 20:52:52", "timestamp": "2025-07-24 20:52:52", "content": "怎么确定答案正确的？"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:53:04", "timestamp": "2025-07-24 20:53:04", "content": "发给她有自动回复"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:53:18", "timestamp": "2025-07-24 20:53:18", "content": "When was Kuroshio Hour?"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:53:26", "timestamp": "2025-07-24 20:53:26", "content": "回复是这个 <span class=\"msg-ref\">↩ b2e8fa7 -> When was Kuroshio Hour?</span>"}, {"user_id": "b2e8fa7", "user_name": "线索发现者", "user_avatar": "🔍", "user_color": "#409eff", "time": "2025-07-24 20:53:37", "timestamp": "2025-07-24 20:53:37", "content": "不过暂时不知道这个是什么意思"}, {"user_id": "31b1081", "user_name": "回应者", "user_avatar": "💬", "user_color": "#f56c6c", "time": "2025-07-24 20:53:59", "timestamp": "2025-07-24 20:53:59", "content": "好吧"}, {"user_id": "31b1081", "user_name": "回应者", "user_avatar": "💬", "user_color": "#f56c6c", "time": "2025-07-24 20:54:10", "timestamp": "2025-07-24 20:54:10", "content": "起码不是两边都卡了"}], "58218483-8665-4357-91c5-4a697f91ef74": [{"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:19:32", "timestamp": "2025-07-20 19:19:32", "content": "测试"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:19:42", "timestamp": "2025-07-20 19:19:42", "content": "能看到消息的话说一声"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:20:05", "timestamp": "2025-07-20 19:20:05", "content": "111"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:20:33", "timestamp": "2025-07-20 19:20:33", "content": "1"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:21:20", "timestamp": "2025-07-20 19:21:20", "content": "行"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:21:27", "timestamp": "2025-07-20 19:21:27", "content": "你怎么想到做这个的"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:21:40", "timestamp": "2025-07-20 19:21:40", "content": "没法 这系统不给开发聊天功能 又得找到对话的方法"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:21:49", "timestamp": "2025-07-20 19:21:49", "content": "于是专门做了这么个工具？"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:22:01", "timestamp": "2025-07-20 19:22:01", "content": "这种事情找个AI帮忙写就可以了（）尽管效果怎么样还有待商榷"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:22:13", "timestamp": "2025-07-20 19:22:13", "content": "什么原理"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:22:40", "timestamp": "2025-07-20 19:22:40", "content": "小把戏 这个工具会轮询指定的文件夹下的所有文件 每三秒同步一次"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:22:57", "timestamp": "2025-07-20 19:22:57", "content": "为了防止竞争写问题每个用户只会写属于自己的那个文档"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:23:24", "timestamp": "2025-07-20 19:23:24", "content": "那确实是在耍把戏了 性能问题怎么办呢"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:23:42", "timestamp": "2025-07-20 19:23:42", "content": "性能你别管 你就说功能实现没吧（"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:23:59", "timestamp": "2025-07-20 19:23:59", "content": "权限问题呢"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:24:06", "timestamp": "2025-07-20 19:24:06", "content": "（（（（（（"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:24:24", "timestamp": "2025-07-20 19:24:24", "content": "有人加进来应该也没问题吧 应该吧（？） 毕竟我们在这里聊的应该也是其他人都已经知道的事情"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:24:30", "timestamp": "2025-07-20 19:24:30", "content": "也是"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:24:55", "timestamp": "2025-07-20 19:24:55", "content": "说起来你是怎么找到这个地方来的 也是通过那张图片？"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:25:04", "timestamp": "2025-07-20 19:25:04", "content": "啊（） 是也不是？"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:25:11", "timestamp": "2025-07-20 19:25:11", "content": "？"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:25:15", "timestamp": "2025-07-20 19:25:15", "content": "？"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:25:30", "timestamp": "2025-07-20 19:25:30", "content": "我的意思是 我拿到图的方式可能和你们不太一样"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:25:41", "timestamp": "2025-07-20 19:25:41", "content": "666还有内幕交易"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:25:47", "timestamp": "2025-07-20 19:25:47", "content": "（"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:26:03", "timestamp": "2025-07-20 19:26:03", "content": "说到这个 你们大概花了多长时间解到这个地方来"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:26:10", "timestamp": "2025-07-20 19:26:10", "content": "组里花了大概五六天出结果吧 主要是组里这段时间的神犇都在忙着解其他的"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:26:20", "timestamp": "2025-07-20 19:26:20", "content": "（这个估计他们应该是没想到的"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:26:25", "timestamp": "2025-07-20 19:26:25", "content": "别的都还好 我们这个水平被一个矩阵卡了一大半时间"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:26:31", "timestamp": "2025-07-20 19:26:31", "content": "气笑了"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:26:43", "timestamp": "2025-07-20 19:26:43", "content": "一种返璞归真的美"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:27:13", "timestamp": "2025-07-20 19:27:13", "content": "其实从其他线索的设计难度上看 应当想得到那个矩阵不会真的要求你理解神经网络（"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:27:26", "timestamp": "2025-07-20 19:27:26", "content": "确实不考察真正的神经网络 但是严重依赖注意力是吧"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:27:34", "timestamp": "2025-07-20 19:27:34", "content": "（"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:27:46", "timestamp": "2025-07-20 19:27:46", "content": "其实我觉得我们这里也不缺拉马努金（什么"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:27:59", "timestamp": "2025-07-20 19:27:59", "content": "话说那个账号关注的v是个什么来头"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:28:08", "timestamp": "2025-07-20 19:28:08", "content": "不太清楚"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:28:29", "timestamp": "2025-07-20 19:28:29", "content": "不过我自己的话倾向于认为是设计者的小趣味 因为至今为止我们都没有发现这二者有任何进一步的关联"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:28:34", "timestamp": "2025-07-20 19:28:34", "content": "小趣味吗"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:28:39", "timestamp": "2025-07-20 19:28:39", "content": "那很好了"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:29:02", "timestamp": "2025-07-20 19:29:02", "content": "）现在解起这种谜来我自己已经相当依赖 AI 了"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:29:14", "timestamp": "2025-07-20 19:29:14", "content": "人工队的话做了这个忘那个"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:29:32", "timestamp": "2025-07-20 19:29:32", "content": "AI 的话挂着跑几十分钟一般的线索基本上都出的来"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:29:44", "timestamp": "2025-07-20 19:29:44", "content": "剩下的全凭天命（什么"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:30:00", "timestamp": "2025-07-20 19:30:00", "content": "应用尽用吧"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:30:24", "timestamp": "2025-07-20 19:30:24", "content": "其实硬要说关联的话还是有 都有人工智能相关的话题？ <span class=\"msg-ref\">↩ e17e013 -> 不过我自己的话倾向于认为...</span>"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:30:49", "timestamp": "2025-07-20 19:30:49", "content": "但是在过去的信息中 我们也看不出文学少女和我们现在接触的这些东西的关联"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:30:57", "timestamp": "2025-07-20 19:30:57", "content": "她有自称会作曲或者找过作曲的吗"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:31:10", "timestamp": "2025-07-20 19:31:10", "content": "？"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:31:17", "timestamp": "2025-07-20 19:31:17", "content": "等下 这个怎么和作曲扯上关系的"}, {"user_id": "6025d18", "user_name": "好奇的参与者", "user_avatar": "🤔", "user_color": "#07c160", "time": "2025-07-20 19:31:30", "timestamp": "2025-07-20 19:31:30", "content": "那个视频里的配乐的特征不像是现有的某首曲子 有一种独特的粗糙 <span class=\"msg-ref\">↩ 5860faf -> 等下 这个怎么和作曲扯上关系的</span>"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:31:41", "timestamp": "2025-07-20 19:31:41", "content": "哦哦"}, {"user_id": "e17e013", "user_name": "系统开发者", "user_avatar": "🧑‍💻", "user_color": "#576b95", "time": "2025-07-20 19:31:50", "timestamp": "2025-07-20 19:31:50", "content": "而且 这边这个解谜的视频里也没有任何插画 这点也与那边的特征不符（"}, {"user_id": "5860faf", "user_name": "观察者", "user_avatar": "👀", "user_color": "#e6a23c", "time": "2025-07-20 19:31:57", "timestamp": "2025-07-20 19:31:57", "content": "也是"}], "96644cf3-6e93-4c51-a9ee-7e7b8d58dc48": [{"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:33:13", "timestamp": "2026-07-22 08:33:13", "content": "我传一下图"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:34:02", "timestamp": "2026-07-22 08:34:02", "content": "就传在这个会话的文件夹下面吧 ID我帮你查好了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:34:05", "timestamp": "2026-07-22 08:34:05", "content": "a0d6d2836185775c3468b71e41d8f3b4a23c26b1db3fae8aacb8a0187bd66212"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:34:14", "timestamp": "2026-07-22 08:34:14", "content": "等我下"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:34:45", "timestamp": "2026-07-22 08:34:45", "content": "话说你能找到那个用来跳目录的按钮吗 不会的话你就搜这个 96644cf3-6e93-4c51-a9ee-7e7b8d58dc48 搜索栏很大应该能看到"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:35:01", "timestamp": "2026-07-22 08:35:01", "content": "（"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:35:05", "timestamp": "2026-07-22 08:35:05", "content": "我找找"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:35:30", "timestamp": "2026-07-22 08:35:30", "content": "什么清朝画质"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:36:20", "timestamp": "2026-07-22 08:36:20", "content": "兄弟没绷住"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:36:34", "timestamp": "2026-07-22 08:36:34", "content": "笑嘻了"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:36:57", "timestamp": "2026-07-22 08:36:57", "content": "这下百口莫辩了"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:37:13", "timestamp": "2026-07-22 08:37:13", "content": "那个论坛里的帖子也是你让他发的吗"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:37:44", "timestamp": "2026-07-22 08:37:44", "content": "我叫他注册的"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:37:53", "timestamp": "2026-07-22 08:37:53", "content": "应该是他发的吧"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:37:59", "timestamp": "2026-07-22 08:37:59", "content": "他这么干你不怕没人再解谜？"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:38:13", "timestamp": "2026-07-22 08:38:13", "content": "？什么意思"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:38:24", "timestamp": "2026-07-22 08:38:24", "content": "https://www.mistarg.cn/post/1434"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:38:32", "timestamp": "2026-07-22 08:38:32", "content": "？"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:39:06", "timestamp": "2026-07-22 08:39:06", "content": "啊？？？"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:39:10", "timestamp": "2026-07-22 08:39:10", "content": "卧槽卧槽卧槽"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:39:19", "timestamp": "2026-07-22 08:39:19", "content": "（"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:39:23", "timestamp": "2026-07-22 08:39:23", "content": "绷"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:39:37", "timestamp": "2026-07-22 08:39:37", "content": "好了好了，这下好了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:39:46", "timestamp": "2026-07-22 08:39:46", "content": "不是哥们"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:40:11", "timestamp": "2026-07-22 08:40:11", "content": "所以怎么说"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:40:17", "timestamp": "2026-07-22 08:40:17", "content": "现在怎么办（"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:40:25", "timestamp": "2026-07-22 08:40:25", "content": "还能怎么办"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:40:35", "timestamp": "2026-07-22 08:40:35", "content": "找他兴师问罪吗"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:40:52", "timestamp": "2026-07-22 08:40:52", "content": "兄弟你把大活一声不吭地推给别人的时候没做二手准备吗"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:41:14", "timestamp": "2026-07-22 08:41:14", "content": "我怎么知道他会那么干"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:41:31", "timestamp": "2026-07-22 08:41:31", "content": "哦不对 是他们真的会到动社工手段的地步"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:41:42", "timestamp": "2026-07-22 08:41:42", "content": "你趁早把防范措施再加固加固罢"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:41:49", "timestamp": "2026-07-22 08:41:49", "content": "血别溅我脸上（"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:41:59", "timestamp": "2026-07-22 08:41:59", "content": "我看看"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:42:35", "timestamp": "2026-07-22 08:42:35", "content": "密码的 啥比企鹅"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:42:44", "timestamp": "2026-07-22 08:42:44", "content": "这玩意留着也是个祸患"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:42:59", "timestamp": "2026-07-22 08:42:59", "content": "怎么说"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:43:52", "timestamp": "2026-07-22 08:43:52", "content": "b企鹅什么时候把我资料卡清没了"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:44:14", "timestamp": "2026-07-22 08:44:14", "content": "你知道吗"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:44:30", "timestamp": "2026-07-22 08:44:30", "content": "人绷住的次数多了就会变成绷绷炸弹"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:44:50", "timestamp": "2026-07-22 08:44:50", "content": "我赶紧补救一下吧"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:44:59", "timestamp": "2026-07-22 08:44:59", "content": "唉发新帖也不行"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:45:20", "timestamp": "2026-07-22 08:45:20", "content": "回视频发个评论好了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:45:29", "timestamp": "2026-07-22 08:45:29", "content": "我账号密码呢"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:45:47", "timestamp": "2026-07-22 08:45:47", "content": "我看你这选择的老好人快要放飞自我了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:45:54", "timestamp": "2026-07-22 08:45:54", "content": "我去求一下他"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:46:13", "timestamp": "2026-07-22 08:46:13", "content": "这样下去真有点难办了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:46:22", "timestamp": "2026-07-22 08:46:22", "content": "再跟其他几个知会一声"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:46:33", "timestamp": "2026-07-22 08:46:33", "content": "你要重拾身为主创的荣光吗"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:46:35", "timestamp": "2026-07-22 08:46:35", "content": "？"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:46:42", "timestamp": "2026-07-22 08:46:42", "content": "我的意思是"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:46:48", "timestamp": "2026-07-22 08:46:48", "content": "大家伙都要他穿女装了"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:46:54", "timestamp": "2026-07-22 08:46:54", "content": "你打算怎么办"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:47:01", "timestamp": "2026-07-22 08:47:01", "content": "能怎么办"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:47:14", "timestamp": "2026-07-22 08:47:14", "content": "难不成跳出来说我是主创？"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:47:24", "timestamp": "2026-07-22 08:47:24", "content": "是我我也会嗯对对对"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:47:37", "timestamp": "2026-07-22 08:47:37", "content": "不打算给他正名吗"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:47:44", "timestamp": "2026-07-22 08:47:44", "content": "盲猜0个人相信"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2026-07-22 08:47:55", "timestamp": "2026-07-22 08:47:55", "content": "我看他要记住你了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:48:01", "timestamp": "2026-07-22 08:48:01", "content": "别吧"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:48:13", "timestamp": "2026-07-22 08:48:13", "content": "我事后请他几杯奶茶好了"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:48:29", "timestamp": "2026-07-22 08:48:29", "content": "后面做设计的时候再看看能不能找机会进一步更正一下看法"}, {"user_id": "4a0aa48", "user_name": "主创", "user_avatar": "🎭", "user_color": "#576b95", "time": "2026-07-22 08:48:37", "timestamp": "2026-07-22 08:48:37", "content": "不信我也没招了"}], "ade46a55-db85-4660-9e74-ea25eb06fc47": [{"user_id": "1a9c660", "user_name": "研究者B", "user_avatar": "🎧", "user_color": "#409eff", "time": "2026-06-20 13:06:45", "timestamp": "2026-06-20 13:06:45", "content": "我再也不会笑了"}, {"user_id": "f60afa4", "user_name": "研究者A", "user_avatar": "📡", "user_color": "#e6a23c", "time": "2026-06-20 13:07:10", "timestamp": "2026-06-20 13:07:10", "content": "874583？"}, {"user_id": "1a9c660", "user_name": "研究者B", "user_avatar": "🎧", "user_color": "#409eff", "time": "2026-06-20 13:07:23", "timestamp": "2026-06-20 13:07:23", "content": "你也在看啊"}, {"user_id": "f60afa4", "user_name": "研究者A", "user_avatar": "📡", "user_color": "#e6a23c", "time": "2026-06-20 13:07:49", "timestamp": "2026-06-20 13:07:49", "content": "毕竟我们这段时间以来一直没有取得新的进展"}, {"user_id": "1a9c660", "user_name": "研究者B", "user_avatar": "🎧", "user_color": "#409eff", "time": "2026-06-20 13:08:10", "timestamp": "2026-06-20 13:08:10", "content": "没有头绪"}, {"user_id": "f60afa4", "user_name": "研究者A", "user_avatar": "📡", "user_color": "#e6a23c", "time": "2026-06-20 13:19:06", "timestamp": "2026-06-20 13:19:06", "content": "我又听了一会"}, {"user_id": "f60afa4", "user_name": "研究者A", "user_avatar": "📡", "user_color": "#e6a23c", "time": "2026-06-20 13:19:20", "timestamp": "2026-06-20 13:19:20", "content": "好像没有听到什么有用的线索"}, {"user_id": "1a9c660", "user_name": "研究者B", "user_avatar": "🎧", "user_color": "#409eff", "time": "2026-06-20 13:19:33", "timestamp": "2026-06-20 13:19:33", "content": "要不要拿这个试试她？"}, {"user_id": "f60afa4", "user_name": "研究者A", "user_avatar": "📡", "user_color": "#e6a23c", "time": "2026-06-20 13:19:44", "timestamp": "2026-06-20 13:19:44", "content": "之后再说吧"}], "c048bbca-c904-4c75-b36e-8a2f5dd4eeec": [{"user_id": "6a08afe", "user_name": "解谜者", "user_avatar": "🧩", "user_color": "#f56c6c", "time": "2025-07-27 14:42:04", "timestamp": "2025-07-27 14:42:04", "content": "怎么感觉这套题目似曾相识"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2025-07-27 14:42:31", "timestamp": "2025-07-27 14:42:31", "content": "正常"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2025-07-27 14:42:55", "timestamp": "2025-07-27 14:42:55", "content": "它已经被用过好几次了"}, {"user_id": "6a08afe", "user_name": "解谜者", "user_avatar": "🧩", "user_color": "#f56c6c", "time": "2025-07-27 14:43:02", "timestamp": "2025-07-27 14:43:02", "content": "哈？"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2025-07-27 14:43:30", "timestamp": "2025-07-27 14:43:30", "content": "你觉得最开始那个文档里说的“传统”是什么意思呢"}, {"user_id": "6a08afe", "user_name": "解谜者", "user_avatar": "🧩", "user_color": "#f56c6c", "time": "2025-07-27 14:43:49", "timestamp": "2025-07-27 14:43:49", "content": "这不是个arg吗"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2025-07-27 14:43:55", "timestamp": "2025-07-27 14:43:55", "content": "嗯"}, {"user_id": "5342bed", "user_name": "伙伴", "user_avatar": "😄", "user_color": "#07c160", "time": "2025-07-27 14:44:00", "timestamp": "2025-07-27 14:44:00", "content": "对"}, {"user_id": "6a08afe", "user_name": "解谜者", "user_avatar": "🧩", "user_color": "#f56c6c", "time": "2025-07-27 14:44:03", "timestamp": "2025-07-27 14:44:03", "content": "？"}], "f0359b6d-e8f4-4056-af1d-2e6360fccff5": [{"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:55:24", "timestamp": "2026-07-30 13:55:24", "content": "现在这个情况怎么办"}, {"user_id": "f67ebac", "user_name": "程序", "user_avatar": "🔧", "user_color": "#07c160", "time": "2026-07-30 13:56:31", "timestamp": "2026-07-30 13:56:31", "content": "我也不知道"}, {"user_id": "f67ebac", "user_name": "程序", "user_avatar": "🔧", "user_color": "#07c160", "time": "2026-07-30 13:56:52", "timestamp": "2026-07-30 13:56:52", "content": "事情怎么完全超出你的预期了，，，"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:57:22", "timestamp": "2026-07-30 13:57:22", "content": "头痛"}, {"user_id": "f67ebac", "user_name": "程序", "user_avatar": "🔧", "user_color": "#07c160", "time": "2026-07-30 13:57:31", "timestamp": "2026-07-30 13:57:31", "content": "观测组那边有预案的吧"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:57:49", "timestamp": "2026-07-30 13:57:49", "content": "有是有"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:57:59", "timestamp": "2026-07-30 13:57:59", "content": "但是现在的数据加起来还是比不上之前的"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:58:13", "timestamp": "2026-07-30 13:58:13", "content": "现在放人进来不会乱套吗"}, {"user_id": "f67ebac", "user_name": "程序", "user_avatar": "🔧", "user_color": "#07c160", "time": "2026-07-30 13:58:27", "timestamp": "2026-07-30 13:58:27", "content": "边放人边观测？"}, {"user_id": "f67ebac", "user_name": "程序", "user_avatar": "🔧", "user_color": "#07c160", "time": "2026-07-30 13:58:39", "timestamp": "2026-07-30 13:58:39", "content": "要是拖太久收集不到数据了怎么办"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:58:53", "timestamp": "2026-07-30 13:58:53", "content": "好吧"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:59:10", "timestamp": "2026-07-30 13:59:10", "content": "通知 SRE 挑时间做个重传吧 稍微洗一下时间"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:59:22", "timestamp": "2026-07-30 13:59:22", "content": "另外这个位置最好别用了 换到里面去"}, {"user_id": "f67ebac", "user_name": "程序", "user_avatar": "🔧", "user_color": "#07c160", "time": "2026-07-30 13:59:35", "timestamp": "2026-07-30 13:59:35", "content": "时间按什么标准洗？"}, {"user_id": "0816205", "user_name": "观测组成员", "user_avatar": "📊", "user_color": "#576b95", "time": "2026-07-30 13:59:51", "timestamp": "2026-07-30 13:59:51", "content": "挑个搞开发的那批人搞更新的时候和维护一起做"}]};
+
+var currentRoom = null;
+var currentUserId = null;
+
+// 渲染侧边栏
+function renderSidebar() {
+    var list = document.getElementById('roomList');
+    list.innerHTML = '';
+    ROOMS.forEach(function(room, index) {
+        var div = document.createElement('div');
+        div.className = 'room-item' + (currentRoom === room.id ? ' active' : '');
+        div.onclick = function() { selectRoom(room.id); };
+
+        var firstMsg = CHATS[room.id] && CHATS[room.id][0];
+        var firstUser = firstMsg ? firstMsg.user_name : '未知';
+
+        div.innerHTML =
+            '<div class="room-avatar">' + (room.users[0] || '💬')[0] + '</div>' +
+            '<div class="room-info">' +
+                '<div class="room-name">' + room.name + '</div>' +
+                '<div class="room-meta">' + room.users.slice(0, 3).join('、') +
+                (room.users.length > 3 ? ' 等' + room.users.length + '人' : '') + '</div>' +
+            '</div>' +
+            '<div class="room-badge">' + room.message_count + '</div>';
+        list.appendChild(div);
+    });
+}
+
+// 格式化时间
+function formatTime(ts) {
+    var d = new Date(ts);
+    var h = d.getHours().toString().padStart(2, '0');
+    var m = d.getMinutes().toString().padStart(2, '0');
+    return h + ':' + m;
+}
+function formatDate(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+}
+
+// 选择房间
+function selectRoom(roomId) {
+    currentRoom = roomId;
+    var room = ROOMS.find(function(r) { return r.id === roomId; });
+    var msgs = CHATS[roomId] || [];
+
+    // 更新头部
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('chatHeader').style.display = 'flex';
+    document.getElementById('chatMessages').style.display = 'block';
+    document.getElementById('chatTitle').textContent = room.name;
+    document.getElementById('chatSubInfo').textContent =
+        room.users.join('、') + ' · ' + room.message_count + ' 条消息';
+
+    // 渲染消息
+    var container = document.getElementById('chatMessages');
+    container.innerHTML = '';
+
+    var lastDate = '';
+    // 确定 "自己" 的 ID（默认用第一个用户作为自己）
+    var userIds = [];
+    msgs.forEach(function(m) {
+        if (userIds.indexOf(m.user_id) === -1) userIds.push(m.user_id);
+    });
+    currentUserId = userIds[0];
+
+    msgs.forEach(function(msg, i) {
+        var msgDate = msg.timestamp.split(' ')[0];
+        if (msgDate !== lastDate) {
+            lastDate = msgDate;
+            var dateLabel = DATE_GROUPS[msgDate] || '';
+            container.innerHTML +=
+                '<div class="time-divider">' +
+                    '<span>' + formatDate(msg.timestamp) + '</span>' +
+                    (dateLabel ? '<span class="date-label">' + dateLabel + '</span>' : '') +
+                '</div>';
+        }
+
+        var isSelf = msg.user_id === currentUserId;
+        container.innerHTML +=
+            '<div class="msg-row' + (isSelf ? ' self' : '') + '">' +
+                '<div class="msg-avatar" style="background:' + msg.user_color + '20;color:' + msg.user_color + '">' +
+                    msg.user_avatar +
+                '</div>' +
+                '<div class="msg-bubble-wrap">' +
+                    '<div class="msg-sender" style="color:' + msg.user_color + '">' +
+                        msg.user_name +
+                    '</div>' +
+                    '<div class="msg-bubble">' +
+                        msg.content +
+                    '</div>' +
+                    '<div class="msg-time">' + formatTime(msg.timestamp) + '</div>' +
+                '</div>' +
+            '</div>';
+    });
+
+    // 滚动到底部
+    container.scrollTop = container.scrollHeight;
+
+    renderSidebar();
+}
+
+// 日期标签
+var DATE_GROUPS = {"2025-07-20": "系统初搭建", "2025-07-24": "线索推进", "2025-07-27": "ARG深入", "2026-06-20": "音频谜题", "2026-07-18": "时间异常", "2026-07-22": "身份危机", "2026-07-30": "重建计划"};
+
+// 初始化
+renderSidebar();
+// 默认打开第一个房间
+if (ROOMS.length > 0) {
+    selectRoom(ROOMS[0].id);
+}
+</script>
+</body>
+</html>
